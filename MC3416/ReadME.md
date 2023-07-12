@@ -19,10 +19,11 @@ Configure the Time Control Register.
 ```
 
 - You Can Download DataSheet MC3416 From This Link: 
--[MC3416](https://www.memsic.com/Public/Uploads/uploadfile/files/20220522/MC3416Datasheet(APS-045-0020v2.2).pdf)
+[MC3416](https://www.memsic.com/Public/Uploads/uploadfile/files/20220522/MC3416Datasheet(APS-045-0020v2.2).pdf)
 
 
--If you use the RTOS operating system, you must change the value of the following macro at the beginning of the MC3416.h file:
+- If you use the RTOS operating system, you must change the value of the following macro at the beginning of the MC3416.h file:
+- 
 ```C
 #define USE_RTOS    1
 ```

@@ -17,12 +17,12 @@
 /*-----------------------------------*/
 /**
  * @brief I2C Write Data Macro
- * 
+ * @param Input Register Address and 1 Byte Data
  */
 #define i2c_wr_byte(ChipAddress,RegAddress,Data)        I2C_Write_Byte(MC34_I2C_Drive,ChipAddress,RegAddress,Data)
 /**
- * @brief I2C Read Data Macro //OutData Is Pinter
- * 
+ * @brief I2C Read Data Macro 
+ * @param OutData Is Pinter
  */
 #define i2c_rd_byte(ChipAddress,RegAddress,OutData)     I2C_Read_Byte(MC34_I2C_Drive,ChipAddress,RegAddress,OutData)  
 /*-----------------------------------*/
@@ -34,7 +34,7 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
     MC34xx_Config = ex_conf;
     
     /*Start Config */
-    
+
     return MC_OK;
 }
 

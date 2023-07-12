@@ -41,9 +41,23 @@ void GPIO_LED(LED_STATE_E LED_STAT)
 void MC3416_Task(void)
 {
     GPIO_INIT();
+    /*config and init mc34xx-----------*/
+    MC34xx_ChipParam_t mc34xx_config = {0};
+    mc34xx_config.g_range=g_range_2g;
+    mc34xx_config.sample_rate=sample_rate_1024;
+    mc34xx_config.X_Gain=0x0f;
+    mc34xx_config.Y_Gain=0x0f;
+    mc34xx_config.Z_Gain=0x0f;
+    
+    MC34xx_Init(&mc34xx_config);    //init mc3416
+    /*---------------------------------*/
+
+
+    uint16_t x_axis,y_axis,z_axis;
 
     while (1)
     {
+        MC34xx_Get_XYZ_Accelerometer(&x_axis,&y_axis,&z_axis);
         GPIO_LED(LED_ON);
         vTaskDelay(pdMS_TO_TICKS(100));
         GPIO_LED(LED_OFF);

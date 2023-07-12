@@ -20,11 +20,50 @@ Configue The Output DataRate 128 To 1024
 - You Can Download DataSheet MC3416 From This Link: 
 [MC3416](https://www.memsic.com/Public/Uploads/uploadfile/files/20220522/MC3416Datasheet(APS-045-0020v2.2).pdf)
 
-
-- If you use the RTOS operating system, you must change the value of the following macro at the beginning of the MC3416.h file:
-- 
 - If you are a user of IC (Accelerometer) MC3416 library You need to do the following steps to port this library with your code:
 - This library is ported for [ESP32-IDF](https://github.com/espressif/esp-idf) , [STM32](https://www.st.com/en/microcontrollers-microprocessors/stm32f1-series.html) Mcrocontroller.
+- If you use the RTOS operating system, you must change the value of the following macro at the beginning of the MC3416.h file:
+
 ```C
 #define USE_RTOS    1
 ```
+- Set Device I2C Number  I2C_0 , I2C_1, ... in I2C_Drive.h:
+```C
+#define MC34_I2C_Drive      I2C_1
+```
+- uncomment Your CPU In This Section I2C_Drive.h :
+```c
+#define ESP32_IDF
+// #define MC60_OPENCPU
+// #define STM32
+```
+
+- you Can use In Main.c Code:
+```c
+#include "MC3416.h"
+
+int main()
+{
+    /*config and init mc34xx-----------*/
+    MC34xx_ChipParam_t mc34xx_config = {0};
+    mc34xx_config.g_range=g_range_2g;
+    mc34xx_config.sample_rate=sample_rate_1024;
+    mc34xx_config.X_Gain=0x0f;
+    mc34xx_config.Y_Gain=0x0f;
+    mc34xx_config.Z_Gain=0x0f;
+    
+    MC34xx_Init(&mc34xx_config);    //init mc3416 -> Disable any interrupt
+    /*---------------------------------*/
+
+    while(1)
+    {
+        MC34xx_Get_XYZ_Accelerometer(&x_axis,&y_axis,&z_axis);  //get 3Axis value
+        vTaskDelay(pdMS_TO_TICKS(5));   //delay For Test 
+    }
+}
+
+```
+
+## Author
+[MH.Taheri](https://github.com/hardphoenix) 
+[Telegram](https://t.me/mhtaheri_ir)

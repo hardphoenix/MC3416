@@ -62,11 +62,11 @@
 /// @brief G-Force Range Can Be Write in Register: REG_Range
 typedef enum
 {
-    range_2g = 0x00,
-    range_4g = 0x01,
-    range_8g = 0x02,
-    range_16g = 0x03,
-    range_12g = 0x04
+    g_range_2g = 0x00,
+    g_range_4g = 0x01,
+    g_range_8g = 0x02,
+    g_range_16g = 0x03,
+    g_range_12g = 0x04
 }Chip_Range_t;
 
 typedef enum

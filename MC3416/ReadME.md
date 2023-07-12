@@ -65,5 +65,5 @@ int main()
 ```
 
 ## Author
-[MH.Taheri](https://github.com/hardphoenix) 
-[Telegram](https://t.me/mhtaheri_ir)
+- [MH.Taheri](https://github.com/hardphoenix) 
+- [Telegram](https://t.me/mhtaheri_ir)

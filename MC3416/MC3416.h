@@ -58,6 +58,9 @@
 #define REG_PK_P2P_DUR_Thresh_LSB   (0x48)
 #define REG_PK_P2P_DUR_Thresh_MSB   (0x49)
 #define REG_Timer_Ctrl      (0x4A)
+
+#define GET_LSB(H)      (uint8_t)((H >> 8) & 0x00ff)
+#define GET_MSB(H)      (uint8_t)(H & 0x00ff)
 //////////////////////////////////////////
 /// @brief G-Force Range Can Be Write in Register: REG_Range
 typedef enum
@@ -99,9 +102,9 @@ typedef enum
 typedef enum
 {
     MC_OK=0,
-    MC_HW_Error=1,
-    MC_ADDR_Error=2,
-    
+    MC_HW_Error,
+    MC_ADDR_Error,
+    MC_Init_Error,
 }EX_Error;
 
 
@@ -109,12 +112,6 @@ typedef struct
 {
     uint8_t Device_Status;
     uint8_t MC_ChipID;
-    uint8_t X_Gain;
-    uint8_t Y_Gain;
-    uint8_t Z_Gain;
-    uint16_t X_Out;
-    uint16_t Y_Out;
-    uint16_t Z_Out;
     uint16_t Tilt_Flip_Thrshold;
     uint8_t Tilt_Flip_Debounce;
     uint16_t AnyMotion_Threshold; 
@@ -130,7 +127,7 @@ typedef struct
 
 EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf);
 EX_Error MC34xx_UpdateStatus(uint8_t *DeviceStatus);
-EX_Error MC34xx_Get_XYZ_Accelerometer(uint16_t *X, uint16_t *Y, uint16_t *Z);
+EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z);
 
 
 #endif

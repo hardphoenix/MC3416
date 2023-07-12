@@ -20,7 +20,7 @@
 #endif
 
 
-static ex_i2c_t I2C_Drive_Init(void *i2c_num,uint32_t i2c_speed)
+ex_i2c_t I2C_Drive_Init(void *i2c_num,uint32_t i2c_speed)
 {
     if(i2c_speed > 1000000) return ex_i2c_speed_error;  //Max Speed Of MC34xx 1 Mhz 
 
@@ -28,25 +28,26 @@ static ex_i2c_t I2C_Drive_Init(void *i2c_num,uint32_t i2c_speed)
     int drive_i2c =0;
     if((int)i2c_num == I2C_NUM_0)drive_i2c = I2C_NUMBER(0);
     else if((int)i2c_num == I2C_NUM_1)drive_i2c = I2C_NUMBER(1);
-    i2c_config_t conf;
+
+    i2c_config_t conf={0};
     conf.mode = I2C_MODE_MASTER;
     conf.sda_io_num = I2C1_MASTER_SDA;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_io_num = I2C1_MASTER_SCL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.clk_flags = i2c_speed;
-    esp_err_t check_err = i2c_param_config(drive_i2c, &conf);
-    if(check_err != ESP_OK)return ex_i2c_init_error;
+    conf.master.clk_speed = i2c_speed;
+    esp_err_t check_err = i2c_param_config((i2c_port_t)drive_i2c, &conf);
+    if(check_err != ESP_OK)return check_err;
 
     check_err = i2c_driver_install(drive_i2c, conf.mode, I2C_MASTER_RX_BUF, I2C_MASTER_TX_BUF, 0);
-    if(check_err != ESP_OK)return ex_i2c_init_error;
+    if(check_err != ESP_OK)return ex_i2c_initdrive_error;
     #endif
 
 
     return ex_i2c_ok;
 }
 
-static ex_i2c_t I2C_Write_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t data)
+ex_i2c_t I2C_Write_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t data)
 {
     #ifdef ESP32_IDF
     esp_err_t check = ESP_OK;
@@ -64,7 +65,7 @@ static ex_i2c_t I2C_Write_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_
     return ex_i2c_ok;
 }
 
-static ex_i2c_t I2C_Read_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t *out_date)
+ex_i2c_t I2C_Read_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t *out_date)
 {
     #ifdef ESP32_IDF
     esp_err_t check = ESP_OK;

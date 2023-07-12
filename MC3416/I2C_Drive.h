@@ -39,12 +39,13 @@ typedef enum
     ex_i2c_error,
     ex_i2c_speed_error,
     ex_i2c_init_error,
+    ex_i2c_initdrive_error,
     ex_i2c_write_error,
 }ex_i2c_t;
 
 
-static ex_i2c_t I2C_Drive_Init(void *i2c_num,uint32_t i2c_speed);
-static ex_i2c_t I2C_Write_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t data);
-static ex_i2c_t I2C_Read_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t *out_date);
+ex_i2c_t I2C_Drive_Init(void *i2c_num,uint32_t i2c_speed);
+ex_i2c_t I2C_Write_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t data);
+ex_i2c_t I2C_Read_Byte(void *i2c_num, uint8_t chip_address, uint8_t reg_address, uint8_t *out_date);
 
 #endif

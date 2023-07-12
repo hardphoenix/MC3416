@@ -31,7 +31,7 @@ Configue The Output DataRate 128 To 1024
 ```C
 #define MC34_I2C_Drive      I2C_1
 ```
-- uncomment Your CPU In This Section I2C_Drive.h :
+- uncomment Your CPU In I2C_Drive.h :
 ```c
 #define ESP32_IDF
 // #define MC60_OPENCPU
@@ -41,6 +41,7 @@ Configue The Output DataRate 128 To 1024
 - you Can use In Main.c Code:
 ```c
 #include "MC3416.h"
+//foo
 
 int main()
 {
@@ -59,11 +60,12 @@ int main()
     {
         MC34xx_Get_XYZ_Accelerometer(&x_axis,&y_axis,&z_axis);  //get 3Axis value
         vTaskDelay(pdMS_TO_TICKS(5));   //delay For Test 
+        //foo
     }
 }
 
 ```
 
 ## Author
-- [MH.Taheri](https://github.com/hardphoenix) 
+- [MH.Taheri Github](https://github.com/hardphoenix) 
 - [Telegram](https://t.me/mhtaheri_ir)

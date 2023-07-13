@@ -86,7 +86,8 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
         MC34xx_private.X_Gain_float = MC34xx_private.Y_Gain_float = MC34xx_private.Z_Gain_float = 1 / 31.0f;
         break;
     }
-   
+    printf("X_Gain_float=%2.4f , Y_Gain_float=%2.4f, Z_Gain_float=%2.4f",MC34xx_private.X_Gain_float,
+                            MC34xx_private.Y_Gain_float,MC34xx_private.Z_Gain_float);
     /*Start Config ------------------------------*/
     i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling
     i2c_rd_byte(MC3416_ADDR,REG_Mode,&data);    //check
@@ -102,11 +103,11 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
 
     i2c_wr_byte(MC3416_ADDR,REG_Range,(uint8_t)MC34xx_Config->g_range);
     i2c_rd_byte(MC3416_ADDR,REG_Range,&data);    //check
-    debug("\r\ndata REG_Range=0x%02X",data);
+    debug("\r\ndataWrite=0x%02X , REG_Range=0x%02X",(uint8_t)MC34xx_Config->g_range, data);
 
     i2c_wr_byte(MC3416_ADDR,REG_SampleRate,(uint8_t)MC34xx_Config->sample_rate);
     i2c_rd_byte(MC3416_ADDR,REG_SampleRate,&data);    //check
-    debug("\r\ndata REG_SampleRate=0x%02X",data);
+    debug("\r\ndataWrite=0x%02X , REG_SampleRate=0x%02X",(uint8_t)MC34xx_Config->sample_rate, data);
 
     i2c_wr_byte(MC3416_ADDR,REG_X_Gain,MC34xx_private.X_Gain);
     i2c_rd_byte(MC3416_ADDR,REG_X_Gain,&data);    //check
@@ -141,7 +142,7 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
     i2c_rd_byte(MC3416_ADDR,REG_SHK_Thresh_MSB,&data);    //check
     debug("\r\ndata REG_SHK_Thresh_MSB=0x%02X",data);
 
-    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //stop sampling
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling
     i2c_rd_byte(MC3416_ADDR,REG_Mode,&data);    //check
     debug("\r\ndata REG_Mode=0x%02X",data);
 
@@ -151,26 +152,29 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
 
 EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z)
 {
-    float ft;
     int data;
     uint8_t rd;
-    i2c_rd_byte(MC3416_ADDR,REG_XOUT_EX_MSB,&rd);
+    i2c_rd_byte(MC3416_ADDR,REG_XOUT_EX_H,&rd);
     data =rd;
-    i2c_rd_byte(MC3416_ADDR,REG_XOUT_EX_LSB,&rd);
-    ft = ((uint16_t)(data << 8 | rd)* MC34xx_private.X_Gain_float);
-    *X = ft;//(float)(ft * MC34xx_private.X_Gain_float);
+    i2c_rd_byte(MC3416_ADDR,REG_XOUT_EX_L,&rd);
+    data = (uint16_t)((data << 8) | rd) & 0x3fff;     //0x3fff -> 14bit mode raw data
+    printf("\nDX=%d",data);
+    *X = data * MC34xx_private.X_Gain_float;
 
-    i2c_rd_byte(MC3416_ADDR,REG_YOUT_EX_MSB,&rd);
+    i2c_rd_byte(MC3416_ADDR,REG_YOUT_EX_H,&rd);
     data =rd;
-    i2c_rd_byte(MC3416_ADDR,REG_YOUT_EX_LSB,&rd);
-    ft = ((uint16_t)(data << 8 | rd)* MC34xx_private.Y_Gain_float);
-    *Y = ft;//(float)(ft * MC34xx_private.X_Gain_float);
+    i2c_rd_byte(MC3416_ADDR,REG_YOUT_EX_L,&rd);
+    data = (uint16_t)(data << 8 | rd) & 0x3fff;
+    printf(", DX=%d",data);
+    *Y = data * MC34xx_private.Y_Gain_float;
 
-    i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_MSB,&rd);
+    i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_H,&rd);
     data =rd;
-    i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_LSB,&rd);
-    ft = ((uint16_t)(data << 8 | rd)* MC34xx_private.Z_Gain_float);
-    *Z = ft;//(float)(ft * MC34xx_private.X_Gain_float);
+    i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_L,&rd);
+    data = (uint16_t)(data << 8 | rd) & 0x3fff;
+    printf(", DX=%d",data);
+    *Z = data * MC34xx_private.Z_Gain_float;
 
     return MC_OK;
 }
+

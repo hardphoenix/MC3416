@@ -28,12 +28,12 @@
 #define REG_Mode         (0x07)
 #define REG_SampleRate   (0x08)
 #define REG_MotionCtrl   (0x09)
-#define REG_XOUT_EX_LSB  (0x0D)
-#define REG_XOUT_EX_MSB  (0x0E)
-#define REG_YOUT_EX_LSB  (0x0F)
-#define REG_YOUT_EX_MSB  (0x10)
-#define REG_ZOUT_EX_LSB  (0x11)
-#define REG_ZOUT_EX_MSB  (0x12)
+#define REG_XOUT_EX_L  (0x0D)
+#define REG_XOUT_EX_H  (0x0E)
+#define REG_YOUT_EX_L  (0x0F)
+#define REG_YOUT_EX_H  (0x10)
+#define REG_ZOUT_EX_L  (0x11)
+#define REG_ZOUT_EX_H  (0x12)
 #define REG_Status_2        (0x13)
 #define REG_Intr_Stat_2     (0x14)
 #define REG_Chip_Id         (0x18)
@@ -65,11 +65,11 @@
 /// @brief G-Force Range Can Be Write in Register: REG_Range
 typedef enum
 {
-    g_range_2g = 0x00,
-    g_range_4g = 0x01,
-    g_range_8g = 0x02,
-    g_range_16g = 0x03,
-    g_range_12g = 0x04
+    g_range_2g = 0x09,
+    g_range_4g = 0x19,
+    g_range_8g = 0x29,
+    g_range_16g = 0x39,
+    g_range_12g = 0x49
 }Chip_Range_t;
 
 typedef enum

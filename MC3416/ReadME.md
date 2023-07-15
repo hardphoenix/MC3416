@@ -55,10 +55,11 @@ int main()
     
     MC34xx_Init(&mc34xx_config);    //init mc3416 -> Disable any interrupt
     /*---------------------------------*/
+    static float x_axis,y_axis,z_axis;  //3 float type for get axis
 
     while(1)
     {
-        MC34xx_Get_XYZ_Accelerometer(&x_axis,&y_axis,&z_axis);  //get 3Axis value
+        MC34xx_Get_XYZ_Float(&x_axis,&y_axis,&z_axis);
         vTaskDelay(pdMS_TO_TICKS(5));   //delay For Test 
         //foo
     }

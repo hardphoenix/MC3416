@@ -105,6 +105,9 @@ typedef enum
     MC_HW_Error,
     MC_ADDR_Error,
     MC_Init_Error,
+    MC_Rd_Error,
+    MC_Rd_NoEqual,
+    MC_ChipID_Error,
 }EX_Error;
 
 
@@ -114,7 +117,7 @@ typedef struct
     uint8_t MC_ChipID;
     uint16_t Tilt_Flip_Thrshold;
     uint8_t Tilt_Flip_Debounce;
-    uint16_t AnyMotion_Threshold; 
+    uint16_t AnyMotion_Threshold;
     uint8_t AnyMotion_Debounce;
     uint16_t Shake_Threshold;
     uint16_t P2P_Duration;
@@ -128,6 +131,5 @@ typedef struct
 EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf);
 EX_Error MC34xx_UpdateStatus(uint8_t *DeviceStatus);
 EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z);
-
 
 #endif

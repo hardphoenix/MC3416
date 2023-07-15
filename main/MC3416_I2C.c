@@ -38,6 +38,31 @@ void GPIO_LED(LED_STATE_E LED_STAT)
 }
 ///////////////////////////////////////////
 
+static void my_mc34xx_motion_cb(MC34xx_Flags_Tilt_t flag)
+{
+    switch ((uint8_t)flag)
+    {
+    case MC_FLAG_Tilt:
+        printf("\n-->Tilt Detected");
+        break;
+    case MC_Flag_Flip:
+        printf("\n-->Flip Detected");
+        break;
+    case MC_Flag_AnyMotion:
+        printf("\n-------->Any Motion Detected");
+        break;
+    case MC_Flag_Shake:
+        printf("\n-->Shake Detected");
+        break;
+    case MC_Flag_Tilt35:
+        printf("\n---------------------------->Tilt35 Detected");
+        break;
+    case MC_Flag_NewData:
+        printf("\n-->New Data Acquired");
+        break;
+    }
+}
+
 void MC3416_Task(void)
 {
     GPIO_INIT();
@@ -45,6 +70,12 @@ void MC3416_Task(void)
     MC34xx_ChipParam_t mc34xx_config = {0};
     mc34xx_config.g_range=g_range_4g;
     mc34xx_config.sample_rate=sample_rate_1024;
+    mc34xx_config.MotionCtrl= MC34xx_MakeByte_MotionCtrl(Tilt_Flip_En,Latch_En,AnyMotion_En,Shake_En,
+                                                        Tilt35_En,Z_AxisOrien_Disable,FilterMotion_Disable,MotionReset_Disable);
+    mc34xx_config.Check_NewDataBit=0;
+    mc34xx_config.AnyMotion_Threshold=0x000f;       //set minimal threshold
+    mc34xx_config.Shake_Threshold=0x000f;           //set minimal threshold
+    mc34xx_config.Tilt_Flip_Thrshold=0x000f;        //set minimal threshold - tilt35
     MC34xx_Init(&mc34xx_config);    //init mc3416
     /*---------------------------------*/
     
@@ -52,12 +83,16 @@ void MC3416_Task(void)
 
     while (1)
     {
-        MC34xx_Get_XYZ_Float(&x_axis,&y_axis,&z_axis);
-        printf("\r\nX=%1.4f, Y=%1.4f, Z=%1.4f\r\n",x_axis, y_axis, z_axis);
+        /*-----------------------------------*/
+        // MC34xx_Get_XYZ_Float(&x_axis,&y_axis,&z_axis);
+        // printf("\r\nX=%1.4f, Y=%1.4f, Z=%1.4f\r\n",x_axis, y_axis, z_axis);
+        MC34xx_GetStatus_Tilt(my_mc34xx_motion_cb);
+        printf("\n-------------------------------------\n");
+        /*-----------------------------------*/
         GPIO_LED(LED_ON);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
         GPIO_LED(LED_OFF);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 

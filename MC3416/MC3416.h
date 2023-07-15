@@ -1,7 +1,6 @@
 #ifndef _MC3416_H
 /**
  * @file MC3416.h
- * @date
  * @author MH.Taheri [HPX] (etatosel@gmail.com)
  * @brief 
  * @version 1
@@ -58,10 +57,30 @@
 #define REG_PK_P2P_DUR_Thresh_LSB   (0x48)
 #define REG_PK_P2P_DUR_Thresh_MSB   (0x49)
 #define REG_Timer_Ctrl      (0x4A)
-
+/*---------------------------------------*/
 #define GET_LSB(H)      (uint8_t)((H >> 8) & 0x00ff)
 #define GET_MSB(H)      (uint8_t)(H & 0x00ff)
+/*---------------------------------------*/
+#define Tilt_Flip_En            1
+#define Tilt_Flip_Disable       0
+#define Latch_En                1 
+#define Latch_Disable           0
+#define AnyMotion_En            1
+#define AnyMotion_Disable       0 
+#define Shake_En                1 
+#define Shake_Disable           0
+#define Tilt35_En               1 
+#define Tilt35_Disable          0 
+#define Z_AxisOrien_En          1 
+#define Z_AxisOrien_Disable     0 
+#define FilterMotion_En         1 
+#define FilterMotion_Disable    0 
+#define MotionReset_En          1 
+#define MotionReset_Disable     0 
 //////////////////////////////////////////
+
+
+
 /// @brief G-Force Range Can Be Write in Register: REG_Range
 typedef enum
 {
@@ -80,12 +99,12 @@ typedef enum
     sample_rate_1024=0x05,
 }Chip_SampleRate_t;
 
-typedef enum
-{
-    Unknown_Device = 0,
-    MC3416_VPP2GND =1,
-    MC3416_VPP2VDD =2,
-}MCxx_chip_type_t;
+// typedef enum
+// {
+//     Unknown_Device = 0,
+//     MC3416_VPP2GND =1,
+//     MC3416_VPP2VDD =2,
+// }MCxx_chip_type_t;
 
 typedef enum
 {
@@ -101,10 +120,33 @@ typedef enum
 
 typedef enum
 {
+    MC_FLAG_Tilt=0,
+    MC_Flag_Flip,
+    MC_Flag_AnyMotion,
+    MC_Flag_Shake,
+    MC_Flag_Tilt35,
+    MC_Flag_NewData,
+}MC34xx_Flags_Tilt_t;
+
+typedef enum
+{
+    MC_MOT_TiltFlip=0,
+    MC_MOT_Latch=1,
+    MC_MOT_AnyMotion=2,
+    MC_MOT_Shake=3,
+    MC_MOT_Tilt35=4,
+    MC_MOT_Z_AxisOrient=5,
+    MC_MOT_FilterMotionData=6,
+    MC_MOT_MotionReset=7,
+}MC34xx_MotionCtrl_t;
+
+typedef enum
+{
     MC_OK=0,
     MC_HW_Error,
     MC_ADDR_Error,
     MC_Init_Error,
+    MC_Wr_Error,
     MC_Rd_Error,
     MC_Rd_NoEqual,
     MC_ChipID_Error,
@@ -121,15 +163,24 @@ typedef struct
     uint8_t AnyMotion_Debounce;
     uint16_t Shake_Threshold;
     uint16_t P2P_Duration;
-    MCxx_chip_type_t chip_type;
+    uint8_t MotionCtrl;
+    bool Check_NewDataBit;
+    // MCxx_chip_type_t chip_type;
     Interrupt_List_t interrupt_list;
     Chip_SampleRate_t sample_rate;
     Chip_Range_t g_range;
+    
 }MC34xx_ChipParam_t;
 
 
 EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf);
 EX_Error MC34xx_UpdateStatus(uint8_t *DeviceStatus);
 EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z);
+uint8_t MC34xx_MakeByte_MotionCtrl (bool TF_En,bool LT_En,bool AM_En,bool SHK_En,bool T35_En,bool Z_Axis_En,
+                                    bool Filter_En,bool MotionReset);
+
+typedef void (* tilt_resp_callback)(MC34xx_Flags_Tilt_t MC_Flags);
+EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb);
+EX_Error MC34xx_Set_MotionBlock_Reset(bool En);
 
 #endif

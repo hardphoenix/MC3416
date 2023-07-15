@@ -51,7 +51,9 @@ typedef struct
 MC34xx_Private_t    MC34xx_private;
 /*----------------------------------*/
 MC34xx_ChipParam_t *MC34xx_Config;
-
+/*----------------------------------*/
+EX_Error MC34xx_Get_CHipID(void);
+/*----------------------------------*/
 
 EX_Error MC34xx_Check_WriteData(uint8_t LastReg, uint8_t LastWrData)
 {
@@ -60,7 +62,7 @@ EX_Error MC34xx_Check_WriteData(uint8_t LastReg, uint8_t LastWrData)
 
     if(LastWrData != rd) return MC_Rd_NoEqual;
 
-    debug("\r\nCheck REG=0x%02X=%0x02X",LastReg,rd);
+    debug("\r\n<<--REG[0x%02X]->Write0x%02X , RdCheck=0x%02X",LastReg,LastWrData,rd);
     return MC_OK;
 }
 
@@ -76,11 +78,11 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
     }
     MC34xx_Config = ex_conf;
     /*----------------------------------------*/
-    if(MC34xx_Get_CHipID() != MC_OK)debug("Get Chip ID With Error");
+    if(MC34xx_Get_CHipID() != MC_OK)debug("\nGet Chip ID With Error");
 
     if(MC34xx_Config->MC_ChipID != 0xA0) return MC_ChipID_Error;        //if chip id 0xA0 This is MC3416-P
 
-    
+    debug("\nChip ID =0x%02X",MC34xx_Config->MC_ChipID);
 
     /*----------------------------------------*/
     switch ((int)MC34xx_Config->g_range)
@@ -106,50 +108,51 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
         MC34xx_private.X_Gain_float = MC34xx_private.Y_Gain_float = MC34xx_private.Z_Gain_float = 1 / 31.0f;
         break;
     }
-    printf("X_Gain_float=%2.4f , Y_Gain_float=%2.4f, Z_Gain_float=%2.4f",MC34xx_private.X_Gain_float,
+    printf("\nX_Gain_float=%2.4f , Y_Gain_float=%2.4f, Z_Gain_float=%2.4f",MC34xx_private.X_Gain_float,
                             MC34xx_private.Y_Gain_float,MC34xx_private.Z_Gain_float);
     /*Start Config ------------------------------*/
     i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling
-    MC34xx_Check_WriteData(REG_Mode,data);    //check
+    if(MC34xx_Check_WriteData(REG_Mode,0x10))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_Intr_Ctrl,0x1f);
-    MC34xx_Check_WriteData(REG_Intr_Ctrl,data);    //check
+    // MC34xx_Config->interrupt_list
+    i2c_wr_byte(MC3416_ADDR,REG_Intr_Ctrl,0x0f);
+    if(MC34xx_Check_WriteData(REG_Intr_Ctrl,0x0f))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_MotionCtrl,0x3f);
-    MC34xx_Check_WriteData(REG_MotionCtrl,data);    //check
+    i2c_wr_byte(MC3416_ADDR,REG_MotionCtrl,MC34xx_Config->MotionCtrl);
+    if(MC34xx_Check_WriteData(REG_MotionCtrl,MC34xx_Config->MotionCtrl))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_Range,(uint8_t)MC34xx_Config->g_range);
-    MC34xx_Check_WriteData(REG_Range,data);    //check
+    if(MC34xx_Check_WriteData(REG_Range,(uint8_t)MC34xx_Config->g_range))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_SampleRate,(uint8_t)MC34xx_Config->sample_rate);
-    MC34xx_Check_WriteData(REG_SampleRate,data);    //check
+    if(MC34xx_Check_WriteData(REG_SampleRate,(uint8_t)MC34xx_Config->sample_rate))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_X_Gain,MC34xx_private.X_Gain);
-    MC34xx_Check_WriteData(REG_X_Gain,data);    //check
+    if(MC34xx_Check_WriteData(REG_X_Gain,MC34xx_private.X_Gain))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_Y_Gain,MC34xx_private.Y_Gain);
-    MC34xx_Check_WriteData(REG_Y_Gain,data);    //check
+    if(MC34xx_Check_WriteData(REG_Y_Gain,MC34xx_private.Y_Gain))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_Z_Gain,MC34xx_private.Z_Gain);
-    MC34xx_Check_WriteData(REG_Z_Gain,data);    //check
+    if(MC34xx_Check_WriteData(REG_Z_Gain,MC34xx_private.Z_Gain))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_TF_Thresh_LSB,GET_LSB(MC34xx_Config->Tilt_Flip_Thrshold));
-    MC34xx_Check_WriteData(REG_TF_Thresh_LSB,data);    //check
-    i2c_wr_byte(MC3416_ADDR,REG_TF_Thresh_MSB,GET_MSB(MC34xx_Config->Tilt_Flip_Thrshold));
-    MC34xx_Check_WriteData(REG_TF_Thresh_MSB,data);    //check
+    i2c_wr_byte(MC3416_ADDR,REG_TF_Thresh_LSB,GET_MSB(MC34xx_Config->Tilt_Flip_Thrshold));
+    if(MC34xx_Check_WriteData(REG_TF_Thresh_LSB,GET_MSB(MC34xx_Config->Tilt_Flip_Thrshold)))return MC_Wr_Error;    //check
+    i2c_wr_byte(MC3416_ADDR,REG_TF_Thresh_MSB,GET_LSB(MC34xx_Config->Tilt_Flip_Thrshold)& 0x7f);
+    if(MC34xx_Check_WriteData(REG_TF_Thresh_MSB,GET_LSB(MC34xx_Config->Tilt_Flip_Thrshold)& 0x7f))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_AM_Thresh_LSB,GET_LSB(MC34xx_Config->AnyMotion_Threshold));
-    MC34xx_Check_WriteData(REG_AM_Thresh_LSB,data);    //check
-    i2c_wr_byte(MC3416_ADDR,REG_AM_Thresh_MSB,GET_MSB(MC34xx_Config->AnyMotion_Threshold));
-    MC34xx_Check_WriteData(REG_AM_Thresh_MSB,data);    //check
+    i2c_wr_byte(MC3416_ADDR,REG_AM_Thresh_LSB,GET_MSB(MC34xx_Config->AnyMotion_Threshold));
+    if(MC34xx_Check_WriteData(REG_AM_Thresh_LSB,GET_MSB(MC34xx_Config->AnyMotion_Threshold)))return MC_Wr_Error;    //check
+    i2c_wr_byte(MC3416_ADDR,REG_AM_Thresh_MSB,GET_LSB(MC34xx_Config->AnyMotion_Threshold)& 0x7f);
+    if(MC34xx_Check_WriteData(REG_AM_Thresh_MSB,GET_LSB(MC34xx_Config->AnyMotion_Threshold)& 0x7f))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_SHK_Thresh_LSB,GET_LSB(MC34xx_Config->Shake_Threshold));
-    MC34xx_Check_WriteData(REG_SHK_Thresh_LSB,data);    //check
-    i2c_wr_byte(MC3416_ADDR,REG_SHK_Thresh_MSB,GET_MSB(MC34xx_Config->Shake_Threshold));
-    MC34xx_Check_WriteData(REG_SHK_Thresh_MSB,data);    //check
-
+    i2c_wr_byte(MC3416_ADDR,REG_SHK_Thresh_LSB,GET_MSB(MC34xx_Config->Shake_Threshold));
+    if(MC34xx_Check_WriteData(REG_SHK_Thresh_LSB,GET_MSB(MC34xx_Config->Shake_Threshold)))return MC_Wr_Error;    //check
+    i2c_wr_byte(MC3416_ADDR,REG_SHK_Thresh_MSB,GET_LSB(MC34xx_Config->Shake_Threshold));
+    if(MC34xx_Check_WriteData(REG_SHK_Thresh_MSB,GET_LSB(MC34xx_Config->Shake_Threshold)))return MC_Wr_Error;    //check
+    
     i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling
-    MC34xx_Check_WriteData(REG_Mode,data);    //check
+    if(MC34xx_Check_WriteData(REG_Mode,0x11))return MC_Wr_Error;    //check
 
     return MC_OK;
 }
@@ -186,8 +189,91 @@ EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z)
 EX_Error MC34xx_Get_CHipID(void)
 {
     uint8_t chipID=0;
-    if(i2c_rd_byte(MC3416_ADDR, REG_Chip_Id, &chipID) != MC_OK) return MC_Rd_Error;
+    if(i2c_rd_byte(MC3416_ADDR, REG_Chip_Id, &chipID) != ex_i2c_ok) return MC_Rd_Error;
 
     MC34xx_Config->MC_ChipID=chipID;
     return MC_OK;
 }
+
+/**
+ * @brief Get Same Response Of All Motion Algorithms and Check New Data Converting In IC
+ * 
+ * @param _titl_cb
+ * @return EX_Error 
+ */
+EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb)
+{
+    uint8_t rd=0;
+    if(i2c_rd_byte(MC3416_ADDR,REG_Status_2,&rd) != ex_i2c_ok)return MC_Rd_Error;
+
+    debug("\nStatusReg=0x%02X",rd);
+    MC34xx_Set_MotionBlock_Reset(1);
+    if((MC34xx_Config->MotionCtrl & 0x01))
+        if((rd & 0x01)==1)_titl_cb(MC_FLAG_Tilt);
+
+    if((MC34xx_Config->MotionCtrl & 0x01))
+        if(((rd >> 1)& 0x01)==1)_titl_cb(MC_Flag_Flip);
+        
+    if(((MC34xx_Config->MotionCtrl >> MC_MOT_AnyMotion) & 0x01) == 1)
+        if(((rd >> 2)& 0x01)==1)_titl_cb(MC_Flag_AnyMotion);
+    
+    if(((MC34xx_Config->MotionCtrl >> MC_MOT_Shake) & 0x01) == 1)
+        if(((rd >> 3)& 0x01)==1)_titl_cb(MC_Flag_Shake);
+    
+    if(((MC34xx_Config->MotionCtrl >> MC_MOT_Tilt35) & 0x01) == 1)
+        if(((rd >> 4)& 0x01)==1)_titl_cb(MC_Flag_Tilt35);
+        
+    if(MC34xx_Config->Check_NewDataBit)
+        if(((rd >> 7)& 0x01)==1)_titl_cb(MC_Flag_NewData);
+    
+    return MC_OK;
+}
+
+
+EX_Error MC34xx_Set_MotionBlock_Reset(bool En)
+{
+    uint8_t bit_reset;
+    if(En)bit_reset=0xff;
+    else bit_reset=0x7f;
+
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling
+    if(MC34xx_Check_WriteData(REG_Mode,0x10) != MC_OK)return MC_Wr_Error;    //check
+
+    i2c_wr_byte(MC3416_ADDR,REG_MotionCtrl,(MC34xx_Config->MotionCtrl & bit_reset));
+    if(MC34xx_Check_WriteData(REG_MotionCtrl,(MC34xx_Config->MotionCtrl & bit_reset)))return MC_Wr_Error;    //check
+
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling
+    if(MC34xx_Check_WriteData(REG_Mode,0x11))return MC_Wr_Error;    //check
+
+    return MC_OK;
+}
+
+/**
+ * @brief 
+ * 
+ * @param TF_En 
+ * @param LT_En 
+ * @param AM_En 
+ * @param SHK_En 
+ * @param T35_En 
+ * @param Z_Axis_En 
+ * @param Filter_En 
+ * @param MotionReset 
+ * @return uint8_t 
+ */
+uint8_t MC34xx_MakeByte_MotionCtrl (bool TF_En,bool LT_En,bool AM_En,bool SHK_En,bool T35_En,bool Z_Axis_En,
+                                    bool Filter_En,bool MotionReset)
+{
+    uint8_t motion=0;
+    if(TF_En) motion = motion | 1;
+    if(LT_En)motion = motion | (1 << 1);
+    if(AM_En)motion = motion | (1 << 2);
+    if(SHK_En)motion = motion | (1 << 3);
+    if(T35_En)motion = motion | (1 << 4);
+    if(Z_Axis_En)motion = motion | (1 << 5);
+    if(Filter_En)motion = motion | (1 << 6);
+    if(MotionReset)motion = motion | (1 << 7);
+
+    return motion;
+}
+                                    

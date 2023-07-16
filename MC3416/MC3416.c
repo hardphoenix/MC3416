@@ -52,7 +52,15 @@ MC34xx_Private_t    MC34xx_private;
 /*----------------------------------*/
 MC34xx_ChipParam_t *MC34xx_Config;
 /*----------------------------------*/
+//Prototype Function Macro
+/**
+ * @brief Get Chip ID
+ * 
+ * @return EX_Error
+ */
 EX_Error MC34xx_Get_CHipID(void);
+
+
 /*----------------------------------*/
 
 EX_Error MC34xx_Check_WriteData(uint8_t LastReg, uint8_t LastWrData)
@@ -111,12 +119,12 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
     printf("\nX_Gain_float=%2.4f , Y_Gain_float=%2.4f, Z_Gain_float=%2.4f",MC34xx_private.X_Gain_float,
                             MC34xx_private.Y_Gain_float,MC34xx_private.Z_Gain_float);
     /*Start Config ------------------------------*/
-    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling -> standby Mode
     if(MC34xx_Check_WriteData(REG_Mode,0x10))return MC_Wr_Error;    //check
 
     // MC34xx_Config->interrupt_list
-    i2c_wr_byte(MC3416_ADDR,REG_Intr_Ctrl,0x0f);
-    if(MC34xx_Check_WriteData(REG_Intr_Ctrl,0x0f))return MC_Wr_Error;    //check
+    i2c_wr_byte(MC3416_ADDR,REG_Intr_Ctrl,MC34xx_Config->INTNCtrl);
+    if(MC34xx_Check_WriteData(REG_Intr_Ctrl,MC34xx_Config->INTNCtrl))return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_MotionCtrl,MC34xx_Config->MotionCtrl);
     if(MC34xx_Check_WriteData(REG_MotionCtrl,MC34xx_Config->MotionCtrl))return MC_Wr_Error;    //check
@@ -151,7 +159,7 @@ EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf)
     i2c_wr_byte(MC3416_ADDR,REG_SHK_Thresh_MSB,GET_LSB(MC34xx_Config->Shake_Threshold));
     if(MC34xx_Check_WriteData(REG_SHK_Thresh_MSB,GET_LSB(MC34xx_Config->Shake_Threshold)))return MC_Wr_Error;    //check
     
-    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling    ->wake Mode
     if(MC34xx_Check_WriteData(REG_Mode,0x11))return MC_Wr_Error;    //check
 
     return MC_OK;
@@ -186,6 +194,7 @@ EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z)
     return MC_OK;
 }
 
+
 EX_Error MC34xx_Get_CHipID(void)
 {
     uint8_t chipID=0;
@@ -193,6 +202,23 @@ EX_Error MC34xx_Get_CHipID(void)
 
     MC34xx_Config->MC_ChipID=chipID;
     return MC_OK;
+}
+
+/**
+ * @brief Check Status Of Last Interruot From Register[Software]
+ * 
+ * @return MC34xx_Interrupt_t 
+ */
+MC34xx_Interrupt_t MC34xx_CheckSoft_Interrupt(void)
+{
+    uint8_t data=0;
+    MC34xx_Interrupt_t Last_INTN=MC_INTN_No;
+    if(i2c_rd_byte(MC3416_ADDR,REG_Intr_Stat_2,&data) != ex_i2c_ok)return MC_Rd_Error;
+
+    debug("\nIntr_Status=0x%02X",data);
+
+
+    return Last_INTN;
 }
 
 /**
@@ -207,7 +233,8 @@ EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb)
     if(i2c_rd_byte(MC3416_ADDR,REG_Status_2,&rd) != ex_i2c_ok)return MC_Rd_Error;
 
     debug("\nStatusReg=0x%02X",rd);
-    MC34xx_Set_MotionBlock_Reset(1);
+    // MC34xx_Set_MotionBlock_Reset(1);    
+
     if((MC34xx_Config->MotionCtrl & 0x01))
         if((rd & 0x01)==1)_titl_cb(MC_FLAG_Tilt);
 
@@ -226,6 +253,8 @@ EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb)
     if(MC34xx_Config->Check_NewDataBit)
         if(((rd >> 7)& 0x01)==1)_titl_cb(MC_Flag_NewData);
     
+    // if(i2c_rd_byte(MC3416_ADDR,REG_Intr_Stat_2,&rd) != ex_i2c_ok)return MC_Rd_Error; //for test
+    // debug("\nINTN Status=0x%02X",rd);
     return MC_OK;
 }
 
@@ -236,20 +265,20 @@ EX_Error MC34xx_Set_MotionBlock_Reset(bool En)
     if(En)bit_reset=0xff;
     else bit_reset=0x7f;
 
-    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x10); //stop sampling 
     if(MC34xx_Check_WriteData(REG_Mode,0x10) != MC_OK)return MC_Wr_Error;    //check
 
     i2c_wr_byte(MC3416_ADDR,REG_MotionCtrl,(MC34xx_Config->MotionCtrl & bit_reset));
     if(MC34xx_Check_WriteData(REG_MotionCtrl,(MC34xx_Config->MotionCtrl & bit_reset)))return MC_Wr_Error;    //check
 
-    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling
+    i2c_wr_byte(MC3416_ADDR,REG_Mode,0x11); //start sampling  ->wake Mode
     if(MC34xx_Check_WriteData(REG_Mode,0x11))return MC_Wr_Error;    //check
 
     return MC_OK;
 }
 
 /**
- * @brief 
+ * @brief Make Byte for Motion Ctrl Register
  * 
  * @param TF_En 
  * @param LT_En 
@@ -265,15 +294,43 @@ uint8_t MC34xx_MakeByte_MotionCtrl (bool TF_En,bool LT_En,bool AM_En,bool SHK_En
                                     bool Filter_En,bool MotionReset)
 {
     uint8_t motion=0;
-    if(TF_En) motion = motion | 1;
-    if(LT_En)motion = motion | (1 << 1);
-    if(AM_En)motion = motion | (1 << 2);
-    if(SHK_En)motion = motion | (1 << 3);
-    if(T35_En)motion = motion | (1 << 4);
-    if(Z_Axis_En)motion = motion | (1 << 5);
-    if(Filter_En)motion = motion | (1 << 6);
-    if(MotionReset)motion = motion | (1 << 7);
+    if(TF_En) motion |= 1;
+    if(LT_En)motion |= (1 << 1);
+    if(AM_En)motion |= (1 << 2);
+    if(SHK_En)motion |= (1 << 3);
+    if(T35_En)motion |= (1 << 4);
+    if(Z_Axis_En)motion |= (1 << 5);
+    if(Filter_En)motion |= (1 << 6);
+    if(MotionReset)motion |= (1 << 7);
 
     return motion;
+}
+
+/**
+ * @brief Make Byte Data for Interrupt Cntrl Register
+ * 
+ * @param TILT_INT_EN 
+ * @param FLIP_INT_EN 
+ * @param ANYM_INT_EN 
+ * @param SHAKE_INT_EN 
+ * @param TILT_35_INT_EN 
+ * @param AUTO_CLR_EN 
+ * @param ACQ_INT_EN 
+ * @return uint8_t 
+ */
+uint8_t MC34xx_MakeByte_InterruptCtrl(bool TILT_INT_EN,bool FLIP_INT_EN,bool ANYM_INT_EN,bool SHAKE_INT_EN,
+                                      bool TILT_35_INT_EN, bool AUTO_CLR_EN, bool ACQ_INT_EN)
+{
+    uint8_t irn=0;
+    if(TILT_INT_EN)irn |= 1;
+    if(FLIP_INT_EN)irn |= (1 << 1);
+    if(ANYM_INT_EN)irn |= (1 << 2);
+    if(SHAKE_INT_EN)irn |= (1 << 3);
+    if(TILT_35_INT_EN)irn |= (1 << 4);
+    //bit5 is Reserved
+    if(AUTO_CLR_EN)irn |= (1 << 6);
+    if(ACQ_INT_EN)irn |= (1 << 7);
+
+    return irn;
 }
                                     

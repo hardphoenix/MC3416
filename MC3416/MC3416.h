@@ -77,6 +77,21 @@
 #define FilterMotion_Disable    0 
 #define MotionReset_En          1 
 #define MotionReset_Disable     0 
+/*--------------------------------------*/
+#define  TILT_INT_Active        1
+#define  TILT_INT_Disable       0 
+#define  FLIP_INT_Active        1
+#define  FLIP_INT_Disable       0
+#define  ANYM_INT_Active        1
+#define  ANYM_INT_Disable       0
+#define  SHAKE_INT_Active       1
+#define  SHAKE_INT_Disable      0
+#define  TILT_35_INT_Active     1
+#define  TILT_35_INT_Disable    0
+#define  AUTO_CLR_Active        1
+#define  AUTO_CLR_Disable       0
+#define  ACQ_INT_Active         1
+#define  ACQ_INT_Disable        0
 //////////////////////////////////////////
 
 
@@ -108,15 +123,15 @@ typedef enum
 
 typedef enum
 {
-    INTN_No_En=0,
-    INTN_Tilt_En,
-    INTN_Flip_En,
-    INTN_AnyMotion_En,
-    INTN_Shake_En,
-    INTN_Tilt_35,
-    INTN_Auto_Clr_En,
-    INTN_ACQ_En,
-}Interrupt_List_t;
+    MC_INTN_No=0,
+    MC_INTN_Tilt,
+    MC_INTN_Flip,
+    MC_INTN_AnyMotion,
+    MC_INTN_Shake,
+    MC_INTN_Tilt_35,
+    MC_INTN_Auto_Clr,
+    MC_INTN_ACQ,
+}MC34xx_Interrupt_t;
 
 typedef enum
 {
@@ -164,12 +179,11 @@ typedef struct
     uint16_t Shake_Threshold;
     uint16_t P2P_Duration;
     uint8_t MotionCtrl;
+    uint8_t INTNCtrl;
     bool Check_NewDataBit;
-    // MCxx_chip_type_t chip_type;
-    Interrupt_List_t interrupt_list;
     Chip_SampleRate_t sample_rate;
     Chip_Range_t g_range;
-    
+    // MCxx_chip_type_t chip_type;
 }MC34xx_ChipParam_t;
 
 
@@ -179,6 +193,10 @@ EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z);
 uint8_t MC34xx_MakeByte_MotionCtrl (bool TF_En,bool LT_En,bool AM_En,bool SHK_En,bool T35_En,bool Z_Axis_En,
                                     bool Filter_En,bool MotionReset);
 
+uint8_t MC34xx_MakeByte_InterruptCtrl(bool TILT_INT_EN,bool FLIP_INT_EN,bool ANYM_INT_EN,bool SHAKE_INT_EN,
+                                      bool TILT_35_INT_EN, bool AUTO_CLR_EN, bool ACQ_INT_EN);
+
+MC34xx_Interrupt_t MC34xx_CheckSoft_Interrupt(void);
 typedef void (* tilt_resp_callback)(MC34xx_Flags_Tilt_t MC_Flags);
 EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb);
 EX_Error MC34xx_Set_MotionBlock_Reset(bool En);

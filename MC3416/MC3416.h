@@ -123,14 +123,14 @@ typedef enum
 
 typedef enum
 {
-    MC_INTN_No=0,
-    MC_INTN_Tilt,
+    MC_INTN_Tilt=0,
     MC_INTN_Flip,
     MC_INTN_AnyMotion,
     MC_INTN_Shake,
     MC_INTN_Tilt_35,
     MC_INTN_Auto_Clr,
     MC_INTN_ACQ,
+    MC_INTN_No,
 }MC34xx_Interrupt_t;
 
 typedef enum
@@ -197,6 +197,7 @@ uint8_t MC34xx_MakeByte_InterruptCtrl(bool TILT_INT_EN,bool FLIP_INT_EN,bool ANY
                                       bool TILT_35_INT_EN, bool AUTO_CLR_EN, bool ACQ_INT_EN);
 
 MC34xx_Interrupt_t MC34xx_CheckSoft_Interrupt(void);
+EX_Error MC34xx_CheckHard_Interrupt(void);
 typedef void (* tilt_resp_callback)(MC34xx_Flags_Tilt_t MC_Flags);
 EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb);
 EX_Error MC34xx_Set_MotionBlock_Reset(bool En);

@@ -181,14 +181,14 @@ EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z)
     data =rd;
     i2c_rd_byte(MC3416_ADDR,REG_YOUT_EX_L,&rd);
     data = (uint16_t)(data << 8 | rd) & 0x3fff;
-    printf(", DX=%d",data);
+    printf(", DY=%d",data);
     *Y = data * MC34xx_private.Y_Gain_float;
 
     i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_H,&rd);
     data =rd;
     i2c_rd_byte(MC3416_ADDR,REG_ZOUT_EX_L,&rd);
     data = (uint16_t)(data << 8 | rd) & 0x3fff;
-    printf(", DX=%d",data);
+    printf(", DZ=%d",data);
     *Z = data * MC34xx_private.Z_Gain_float;
 
     return MC_OK;
@@ -211,14 +211,36 @@ EX_Error MC34xx_Get_CHipID(void)
  */
 MC34xx_Interrupt_t MC34xx_CheckSoft_Interrupt(void)
 {
-    uint8_t data=0;
+    uint8_t data=0,i=0;
     MC34xx_Interrupt_t Last_INTN=MC_INTN_No;
     if(i2c_rd_byte(MC3416_ADDR,REG_Intr_Stat_2,&data) != ex_i2c_ok)return MC_Rd_Error;
 
     debug("\nIntr_Status=0x%02X",data);
+    if(data == 0x00) return MC_INTN_No;
 
-
+    for(i=0; i<8; i++)
+    {
+        if(((data >> i)& 0x01)==1)
+        {
+            Last_INTN=i;
+            break;
+        }
+    }
     return Last_INTN;
+}
+
+/**
+ * @brief MC34xx For Send Interrupt From MC34xx IC Must Read REG_Intr_Stat_2 Register.
+ * @brief After This Function if Pin ISR Recive Interrupt Can You Call [MC34xx_CheckSoft_Interrupt]
+ * 
+ * @return EX_Error 
+ */
+EX_Error MC34xx_CheckHard_Interrupt(void)
+{
+    uint8_t data=0;
+    if(i2c_rd_byte(MC3416_ADDR,REG_Intr_Stat_2,&data) != ex_i2c_ok)return MC_Rd_Error;
+
+    return MC_OK;
 }
 
 /**
@@ -232,8 +254,7 @@ EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb)
     uint8_t rd=0;
     if(i2c_rd_byte(MC3416_ADDR,REG_Status_2,&rd) != ex_i2c_ok)return MC_Rd_Error;
 
-    debug("\nStatusReg=0x%02X",rd);
-    // MC34xx_Set_MotionBlock_Reset(1);    
+    debug("\nStatusReg=0x%02X",rd);    
 
     if((MC34xx_Config->MotionCtrl & 0x01))
         if((rd & 0x01)==1)_titl_cb(MC_FLAG_Tilt);

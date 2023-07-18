@@ -60,6 +60,31 @@ int main()
     while(1)
     {
         MC34xx_Get_XYZ_Float(&x_axis,&y_axis,&z_axis);
+        MC34xx_intn_list = MC34xx_CheckSoft_Interrupt();    /*Check ISR Register*/
+        switch ((uint8_t)MC34xx_intn_list)
+        {
+        case MC_INTN_No:
+            printf("\nNo Any INTN");
+            break;
+        case MC_INTN_Tilt:
+            printf("\n--->Tilt INT Readed!");
+            break;
+        case MC_INTN_Flip:
+            printf("\n--->Flip INT Readed!");
+            break;
+        case MC_INTN_AnyMotion:
+            printf("\n--->AnyMotion INT Readed!");
+            break;
+        case MC_INTN_Shake:
+            printf("\n--->Shake INT Readed!");
+            break;
+        case MC_INTN_Tilt_35:
+            printf("\n--->Tilt_35 INT Readed!");
+            break;
+        case MC_INTN_ACQ:
+            printf("\n--->ACQ INT Readed!");
+            break;
+        }
         vTaskDelay(pdMS_TO_TICKS(5));   //delay For Test 
         //foo
     }

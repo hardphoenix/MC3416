@@ -1,7 +1,7 @@
 /**
  * @file I2C_Drive.h
  * @author MH.Taheri [HPX] (etatosel@gmail.com)
- * @brief I2c Drive For ESP32 And MC60
+ * @brief I2c Drive For ESP32 And ;)
  * @version 1
  * @date 2023-07
  * 

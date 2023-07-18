@@ -2,7 +2,8 @@
 /**
  * @file MC3416.h
  * @author MH.Taheri [HPX] (etatosel@gmail.com)
- * @brief 
+ * @link https://github.com/hardphoenix
+ * @brief MC3416 MEMSIC Accelerometer IC Driver
  * @version 1
  * @date 2023-07
  * 
@@ -21,6 +22,7 @@
  * 
  */
 //////////////////////////////////////////
+/*MC3416_ADDR if vpp Connect To GND 0x4C And If Connect To VDD Address is 0x6C*/
 #define MC3416_ADDR      (0x4C)
 #define REG_Dev_Status   (0x05)
 #define REG_Intr_Ctrl    (0x06)
@@ -93,9 +95,6 @@
 #define  ACQ_INT_Active         1
 #define  ACQ_INT_Disable        0
 //////////////////////////////////////////
-
-
-
 /// @brief G-Force Range Can Be Write in Register: REG_Range
 typedef enum
 {
@@ -106,6 +105,7 @@ typedef enum
     g_range_12g = 0x49
 }Chip_Range_t;
 
+/// @brief List All Sample rate 
 typedef enum
 {
     sample_rate_128_default = 0x00,
@@ -114,13 +114,28 @@ typedef enum
     sample_rate_1024=0x05,
 }Chip_SampleRate_t;
 
-// typedef enum
-// {
-//     Unknown_Device = 0,
-//     MC3416_VPP2GND =1,
-//     MC3416_VPP2VDD =2,
-// }MCxx_chip_type_t;
+/// @brief list of all mode 
+typedef enum
+{
+    MC_Mode_Wake=0,
+    MC_Mode_Standby=1
+}MC34xx_Mode_t;
 
+/// @brief list all Tilt-35 timer duration
+typedef enum
+{
+    MC_Timer_CTRL_No=0,
+    MC_Timer_CTRL_1_6s,
+    MC_Timer_CTRL_1_8s,
+    MC_Timer_CTRL_2_0s,
+    MC_Timer_CTRL_2_2s,
+    MC_Timer_CTRL_2_4s,
+    MC_Timer_CTRL_2_6s,
+    MC_Timer_CTRL_2_8s,
+    MC_Timer_CTRL_3_0s,
+}MC34xx_Timer_Ctrl_Tilt35_t;
+
+/// @brief List of INTN Bit Mask
 typedef enum
 {
     MC_INTN_Tilt=0,
@@ -133,6 +148,7 @@ typedef enum
     MC_INTN_No,
 }MC34xx_Interrupt_t;
 
+/// @brief List Flags of Tilt Algorithm
 typedef enum
 {
     MC_FLAG_Tilt=0,
@@ -143,6 +159,7 @@ typedef enum
     MC_Flag_NewData,
 }MC34xx_Flags_Tilt_t;
 
+/// @brief List Motion CTRL Bit 
 typedef enum
 {
     MC_MOT_TiltFlip=0,
@@ -155,6 +172,7 @@ typedef enum
     MC_MOT_MotionReset=7,
 }MC34xx_MotionCtrl_t;
 
+/// @brief List All Return Enum
 typedef enum
 {
     MC_OK=0,
@@ -165,10 +183,11 @@ typedef enum
     MC_Rd_Error,
     MC_Rd_NoEqual,
     MC_ChipID_Error,
+    MC_Timer_Set_Error,
 }EX_Error;
 
 
-typedef struct 
+typedef struct __attribute__((__packed__))
 {
     uint8_t Device_Status;
     uint8_t MC_ChipID;
@@ -183,13 +202,13 @@ typedef struct
     bool Check_NewDataBit;
     Chip_SampleRate_t sample_rate;
     Chip_Range_t g_range;
-    // MCxx_chip_type_t chip_type;
+    MC34xx_Timer_Ctrl_Tilt35_t tilt35_time_ctrl;
 }MC34xx_ChipParam_t;
 
 
 EX_Error MC34xx_Init(MC34xx_ChipParam_t *ex_conf);
-EX_Error MC34xx_UpdateStatus(uint8_t *DeviceStatus);
 EX_Error MC34xx_Get_XYZ_Float(float *X, float *Y, float *Z);
+EX_Error MC34xx_Get_XYZ_RowData(int32_t *X_Axis,int32_t *Y_Axis, int32_t *Z_Axis);
 uint8_t MC34xx_MakeByte_MotionCtrl (bool TF_En,bool LT_En,bool AM_En,bool SHK_En,bool T35_En,bool Z_Axis_En,
                                     bool Filter_En,bool MotionReset);
 
@@ -201,5 +220,7 @@ EX_Error MC34xx_CheckHard_Interrupt(void);
 typedef void (* tilt_resp_callback)(MC34xx_Flags_Tilt_t MC_Flags);
 EX_Error MC34xx_GetStatus_Tilt(tilt_resp_callback _titl_cb);
 EX_Error MC34xx_Set_MotionBlock_Reset(bool En);
+EX_Error MC34xx_SetMode(MC34xx_Mode_t mode);
+EX_Error MC34xx_SetTimeDuration_Tilt35(MC34xx_Timer_Ctrl_Tilt35_t time_duration);
 
 #endif

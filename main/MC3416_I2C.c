@@ -1,3 +1,14 @@
+/**
+ * @file MC3416_I2C.c
+ * @author MH.Taheri [HPX] (etatosel@gmail.com)
+ * @version 1
+ * 
+ * 
+ * @date 2023-07
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -118,81 +129,84 @@ void MC3416_Task(void)
                                                         Tilt35_En,Z_AxisOrien_Disable,FilterMotion_Disable,MotionReset_Disable);
     //Active/Disable Custom Interrupt
     mc34xx_config.INTNCtrl= MC34xx_MakeByte_InterruptCtrl(TILT_INT_Disable,FLIP_INT_Disable,ANYM_INT_Active,SHAKE_INT_Disable,
-                                                          TILT_35_INT_Disable,AUTO_CLR_Disable,ACQ_INT_Disable);
+                                                          TILT_35_INT_Active,AUTO_CLR_Disable,ACQ_INT_Disable);
     MC34xx_Init(&mc34xx_config);    //init MC34xx
     /*---------------------------------*/
     
     static float x_axis,y_axis,z_axis;
+    static int32_t xi,yi,zi;
     MC34xx_Interrupt_t MC34xx_intn_list;
     uint32_t pin_mask=0;
     while (1)
     {
         /*-----------------------------------*/
         MC34xx_Get_XYZ_Float(&x_axis,&y_axis,&z_axis);
-        printf("\r\nX=%1.4f, Y=%1.4f, Z=%1.4f\r\n",x_axis, y_axis, z_axis);
+        MC34xx_Get_XYZ_RowData(&xi,&yi,&zi);
+        
         // MC34xx_GetStatus_Tilt(my_mc34xx_motion_cb);
         printf("\n----------------\n");
         /*-----------------------------------*/
-        //Poolin Mode Check Register ISR MC34xx -> Software Mode 
-        //Check ISR From MC34xx Software Mode
-        // MC34xx_intn_list = MC34xx_CheckSoft_Interrupt();    /*Check ISR Register*/
-        // switch ((uint8_t)MC34xx_intn_list)
-        // {
-        // case MC_INTN_No:
-        //     printf("\nNo Any INTN");
-        //     break;
-        // case MC_INTN_Tilt:
-        //     printf("\n--->Tilt INT Readed!");
-        //     break;
-        // case MC_INTN_Flip:
-        //     printf("\n--->Flip INT Readed!");
-        //     break;
-        // case MC_INTN_AnyMotion:
-        //     printf("\n--->AnyMotion INT Readed!");
-        //     break;
-        // case MC_INTN_Shake:
-        //     printf("\n--->Shake INT Readed!");
-        //     break;
-        // case MC_INTN_Tilt_35:
-        //     printf("\n--->Tilt_35 INT Readed!");
-        //     break;
-        // case MC_INTN_ACQ:
-        //     printf("\n--->ACQ INT Readed!");
-        //     break;
-        // }
+        //Software Mode 
+        //Poolin Mode Check Register ISR MC34xx
+        MC34xx_intn_list = MC34xx_CheckSoft_Interrupt();    /*Check ISR Register*/
+        switch ((uint8_t)MC34xx_intn_list)
+        {
+        case MC_INTN_No:
+            // printf("\nNo Any INTN");
+            break;
+        case MC_INTN_Tilt:
+            printf("\n--->Tilt INT Detect!");
+            break;
+        case MC_INTN_Flip:
+            printf("\n--->Flip INT Detect!");
+            break;
+        case MC_INTN_AnyMotion:
+            printf("\n--->AnyMotion INT Detect!");
+            break;
+        case MC_INTN_Shake:
+            printf("\n--->Shake INT Detect!");
+            break;
+        case MC_INTN_Tilt_35:
+            printf("\n--->Tilt_35 INT Detect!");
+            break;
+        case MC_INTN_ACQ:
+            printf("\n--->ACQ INT Detect!");
+            break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
         /*-----------------------------------*/
         //Hardware Mode
         //Check ISR From MC34xx With INTN Hardware Pin After Check Register 
-        MC34xx_CheckHard_Interrupt();
-        if(xQueueReceive(gpio_in_queue, &pin_mask,100 /*portMAX_DELAY*/))
-        {
-            printf("\n->ISR From Pin=%"PRIu32"",pin_mask);
-            MC34xx_intn_list = MC34xx_CheckSoft_Interrupt();    /*Check ISR Register*/
-            switch ((uint8_t)MC34xx_intn_list)
-            {
-            case MC_INTN_No:
-                printf("\nNo Any INTN");
-                break;
-            case MC_INTN_Tilt:
-                printf("\n--->Tilt INT Readed!");
-                break;
-            case MC_INTN_Flip:
-                printf("\n--->Flip INT Readed!");
-                break;
-            case MC_INTN_AnyMotion:
-                printf("\n--->AnyMotion INT Readed!");
-                break;
-            case MC_INTN_Shake:
-                printf("\n--->Shake INT Readed!");
-                break;
-            case MC_INTN_Tilt_35:
-                printf("\n--->Tilt_35 INT Readed!");
-                break;
-            case MC_INTN_ACQ:
-                printf("\n--->ACQ INT Readed!");
-                break;
-            }
-        }
+        // MC34xx_CheckHard_Interrupt();
+        // if(xQueueReceive(gpio_in_queue, &pin_mask,100 /*portMAX_DELAY*/))
+        // {
+        //     printf("\n->ISR From Pin=%"PRIu32"",pin_mask);
+        //     MC34xx_intn_list = MC34xx_CheckSoft_Interrupt();    /*Check ISR Register*/
+        //     switch ((uint8_t)MC34xx_intn_list)
+        //     {
+        //     case MC_INTN_No:
+        //         printf("\nNo Any INTN");
+        //         break;
+        //     case MC_INTN_Tilt:
+        //         printf("\n--->Tilt INT Readed!");
+        //         break;
+        //     case MC_INTN_Flip:
+        //         printf("\n--->Flip INT Readed!");
+        //         break;
+        //     case MC_INTN_AnyMotion:
+        //         printf("\n--->AnyMotion INT Readed!");
+        //         break;
+        //     case MC_INTN_Shake:
+        //         printf("\n--->Shake INT Readed!");
+        //         break;
+        //     case MC_INTN_Tilt_35:
+        //         printf("\n--->Tilt_35 INT Readed!");
+        //         break;
+        //     case MC_INTN_ACQ:
+        //         printf("\n--->ACQ INT Readed!");
+        //         break;
+        //     }
+        // }
         /*-----------------------------------*/
     }
 }

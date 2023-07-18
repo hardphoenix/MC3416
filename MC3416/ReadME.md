@@ -92,6 +92,6 @@ int main()
 
 ```
 
-## Author
+## Contact The Author
 - [MH.Taheri Github](https://github.com/hardphoenix) 
 - [Telegram](https://t.me/mhtaheri_ir)
